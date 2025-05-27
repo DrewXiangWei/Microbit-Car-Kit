@@ -1,0 +1,19 @@
+from microbit import * // Import micro bit library 
+Import radio // Import radio for wireless communication 
+// set up the radio 
+radio.config(group=8) // Use group 8 for communication 
+radio.on() // Turn on the radio 
+// Main loop to check buttons 
+while True:
+	if button_a.is_pressed(): // If button A is pressed 
+		radio.send("A") // Send "A" over the radio 
+		display.show("A") // Show "A" on the screen 
+		print("A") // print "A" in the console 
+	if button_b.is_pressed(): // If button B is pressed 
+		radio.send("B") // Send "B" over the radio 
+		display.show("B") // Show "B" on the screen 
+		print("B") // Print "B" in the console 
+	// Clear the screen if no buttons are pressed 
+	if not button_a.is_pressed() and not button_b.is_pressed(): 
+	display.clear() // Turn off the screen
+

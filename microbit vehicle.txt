@@ -1,0 +1,76 @@
+from Kitronik MOVE Motor import MOVE Motor // Import the Kitronik MOVE Motor library for controlling motors
+from micro bit import *// Import core micro bit functionality such as display, pins, and buttons
+from neopixel import NeoPixel // Import the NeoPixel library to control RGB LED strips
+import time // Import the time module for delays and timing functions
+import radio // Import the radio module to enable wireless communication between micro bits
+import speech // Import the speech module to allow the micro bit to generate spoken words
+//set up radio, motors, and lights
+radio.config(group=8) //use group 8 for communication
+radio.on() //turn on the radio
+trigger = pin13 //ultrasonic trigger pin
+echo = pin14 //ultrasonic echo pin
+strip = NeoPixel(pin0, 5)  //5 LEDs
+move_motor = MOVEMotor() //set motors
+def get_distance():
+    """
+    Measure distance using the ultrasonic sensor.
+    """
+    trigger.write_digital(0)
+    time.sleep_us(2)
+    trigger.write_digital(1)
+    time.sleep_us(10)
+    trigger.write_digital(0)
+    # Wait for echo response
+    while echo.read_digital() == 0:
+        pass
+    start_time = time.ticks_us()
+    while echo.read_digital() == 1:
+        pass
+    end_time = time.ticks_us()
+    # Calculate duration and distance
+    duration = time.ticks_diff(end_time, start_time)
+    distance = (duration / 2) / 29.1  //distance in cm
+    return distance
+def off_motors(car):
+    """
+    Stop all motors.
+    """
+    car.motorOff("l") //turn off left motor
+    car.motorOff("r") //turn off right motor
+def main():
+    car = MOVEMotor() //create a motor control object
+    car.motorOn("r", "f", 0) //ensure right motor is on
+    car.motorOn("l", "f", 0) //ensure left motor is on
+    while True:
+        distance = get_distance() //set the variable to measure the distance
+        message = radio.receive() //get message from the radio
+        if message: //if a message is received
+            if message == "A":
+                print("A - Turn left") //display A and turn left
+                car.motorOff("r") //stop the right motor
+                car.motorOn("l", "f", 50) //turn left
+                speech.say('Turning Left') //play sound say turn left
+            elif message == "B":
+                print("B - Turn right") // display B and turn right
+                car.motorOff("l") //stop the left motor
+                car.motorOn("r", "f", 50) //turn right
+                speech.say('Turning Right') //play sound say turn right
+            elif message == "A" and message == "B":
+                car.motorOff("l") //stop left motor
+                car.motorOff("r") //stop right motor
+                display.scroll('Stop') //display stop
+                speech.say('STOP') //speak stop
+            display.clear() //clear display
+        if distance <= 10: //if an obstacle is near below 10 cm
+            # Stop motors and signal obstacle
+            car.motorOn("l","r",40) //reverse left motor
+            car.motorOn("r","r",40) //reverse right motor
+            display.show(Image.NO) // display "No" on the micro bit
+        else:
+            # Move forward
+            car.motorOn("l", "f", 30) //move left motor forward
+            car.motorOn("r", "f", 30) //move right motor forward
+            display.clear() //Clear display when moving
+            
+if __name__ == '__main__':
+    main() //run the main program
